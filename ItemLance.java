@@ -334,7 +334,6 @@ public class ItemLance extends ItemSword {
 	}
 
 	private boolean attack(EntityLivingBase entity, EntityPlayer player) {
-		// Test
 		boolean isForwardKeyPressed;
 		if(this.isRunningOnClient()) {
 			isForwardKeyPressed = Minecraft.getMinecraft().gameSettings.keyBindForward.pressed;
