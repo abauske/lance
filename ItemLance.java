@@ -343,39 +343,41 @@ public class ItemLance extends ItemSword {
 			PacketHandler.isForwardKeyPressed = false;
 		}
 		float hit = Math.abs(this.hit) * 4;
-		float hurt = (float) (this.getSpeed(entity) + this.getSpeed(player) + hit);
-		if(this.hit != 0) {
-			float test = this.hit;
-			this.hit = 0.0F;
-		}
-		if(player.isSprinting()) {
-			if(hurt == 0) {
-				hurt = 6.6666666666666666666F;
+		if(hit != 0 || player.getDistanceToEntity(entity) <= 6) {
+			float hurt = (float) (this.getSpeed(entity) + this.getSpeed(player) + hit);
+			if(this.hit != 0) {
+				float test = this.hit;
+				this.hit = 0.0F;
 			}
-			hurt *= 1.5F;
-		} else if(player.isRiding()) {
-			Entity ridingEntity = player.ridingEntity;
-			if(ridingEntity instanceof EntityHorse) {
-				if(isForwardKeyPressed) {
-					hurt += 6F;
+			if(player.isSprinting()) {
+				if(hurt == 0) {
+					hurt = 6.6666666666666666666F;
 				}
-				hurt *= 2F;
-			} else if(ridingEntity instanceof EntityPig) {
-				if(isForwardKeyPressed) {
-					hurt += 2F;
+				hurt *= 1.5F;
+			} else if(player.isRiding()) {
+				Entity ridingEntity = player.ridingEntity;
+				if(ridingEntity instanceof EntityHorse) {
+					if(isForwardKeyPressed) {
+						hurt += 6F;
+					}
+					hurt *= 2F;
+				} else if(ridingEntity instanceof EntityPig) {
+					if(isForwardKeyPressed) {
+						hurt += 2F;
+					}
+					hurt *= 1.1;
 				}
-				hurt *= 1.1;
+			} else if(player.isSneaking()) {
+				hurt *= 0.1F;
+			} else if(isForwardKeyPressed) {
+				hurt += 2F;
 			}
-		} else if(player.isSneaking()) {
-			hurt *= 0.1F;
-		} else if(isForwardKeyPressed) {
-			hurt += 2F;
-		}
-//		hurt = 35;
-		if(hurt != 0) {
-			entity.attackEntityFrom(DamageSource.causePlayerDamage(player), hurt);
-			if(!player.capabilities.isCreativeMode) {
-				return true;
+//			hurt = 35;
+			if(hurt != 0) {
+				entity.attackEntityFrom(DamageSource.causePlayerDamage(player), hurt);
+				if(!player.capabilities.isCreativeMode) {
+					return true;
+				}
 			}
 		}
 		return false;
