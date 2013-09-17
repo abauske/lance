@@ -1,5 +1,7 @@
 package knight37x.lance;
 
+import java.util.Locale.Category;
+
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.EnumToolMaterial;
@@ -50,9 +52,9 @@ public class Lance {
 	
 	public static Item lanceUp;
 	private int lanceUpID = 451;
-	// Parts of Lance:
-	public static Item lanceShaft;
-	public int lanceShaftID = 452;
+	
+	public static Item shaft;
+	private int shaftID = 460;
 	// Test Block:
 	public static Block testBlock;
 	private static int testBlockID = 249;
@@ -69,7 +71,7 @@ public class Lance {
 //		lance1ID = config.get(Configuration.CATEGORY_ITEM, "Lance ID", 452).getInt();
 		lanceOnID = config.get(Configuration.CATEGORY_ITEM, "Lance ID", 450).getInt();
 		lanceUpID = config.get(Configuration.CATEGORY_ITEM, "Lance Up ID", 451).getInt();
-		lanceShaftID = config.get(Configuration.CATEGORY_ITEM, "Lance Rod ID", 452).getInt();
+		shaftID = config.get(Configuration.CATEGORY_ITEM, "Shaft ID", 460).getInt();
 		
 		createTestBlock = config.get(Configuration.CATEGORY_GENERAL, "Create Test Block (Don't use it)", false).getBoolean(false);
 		testBlockID = config.get(Configuration.CATEGORY_GENERAL, "Test Block ID (Don't use)", 249).getInt();
@@ -84,7 +86,7 @@ public class Lance {
 		lanceOn = new ItemLance(lanceOnID, EnumToolMaterial.IRON).setUnlocalizedName("lance").setMaxStackSize(1).setMaxDamage(500).setCreativeTab(null);
 //		lanceUp = new ItemLance(lanceUpID, EnumToolMaterial.IRON).setUnlocalizedName("lance").setMaxStackSize(1).setMaxDamage(500);
 		lanceUp = new ItemLanceUp(lanceUpID, EnumToolMaterial.IRON).setUnlocalizedName("lanceUp").setMaxStackSize(1).setMaxDamage(500);
-//		lanceShaft = new ItemGeneral(lanceShaftID, "lanceShaft").setCreativeTab(CreativeTabs.tabMaterials).setUnlocalizedName("lanceRod");
+		shaft = new ItemShaft(shaftID).setCreativeTab(CreativeTabs.tabMisc).setUnlocalizedName("shaft");
 		if(this.createTestBlock) {
 			testBlock = new TestBlock(testBlockID).setCreativeTab(CreativeTabs.tabBlock).setUnlocalizedName("testBlock");
 		}
@@ -106,8 +108,8 @@ public class Lance {
 	
 	private void registerRecipes()
 	{
-//		GameRegistry.addShapedRecipe(new ItemStack(lanceShaft, 1), "#  ", " # ", "  #", '#', Item.stick);
-//		GameRegistry.addRecipe(new ItemStack(lanceUp, 1), "  X", " # ", "#  ", '#', lanceShaft, 'X', Item.ingotIron);
+		GameRegistry.addShapedRecipe(new ItemStack(shaft, 1), "#  ", " # ", "  #", '#', Item.stick);
+		GameRegistry.addRecipe(new ItemStack(lanceUp, 1), "  X", " # ", "#  ", '#', shaft, 'X', Item.ingotIron);
 	}
 	
 	private void registerItems()
@@ -115,7 +117,7 @@ public class Lance {
 //		GameRegistry.registerItem(lance1, "lance1");
 		GameRegistry.registerItem(lanceOn, "lance");
 		GameRegistry.registerItem(lanceUp, "lanceUp");
-//		GameRegistry.registerItem(lanceShaft, "lanceShaft");
+		GameRegistry.registerItem(shaft, "shaft");
 		
 		// Test Block:
 		if(this.createTestBlock) {
@@ -128,7 +130,7 @@ public class Lance {
 //		LanguageRegistry.addName(lance1, "Lance");
 		LanguageRegistry.addName(lanceOn, "Lance");
 		LanguageRegistry.addName(lanceUp, "Lance");
-//		LanguageRegistry.addName(lanceShaft, "Lance Shaft");
+		LanguageRegistry.addName(shaft, "Lance Shaft");
 		
 		// Test Block:
 		if(this.createTestBlock) {
