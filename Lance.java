@@ -28,7 +28,7 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@Mod(modid = "lance", name = "Lancess Mod", version = "2.2.162")
+@Mod(modid = "lance", name = "Lancess Mod", version = "2.2.3.162")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false, channels = {"lance", "lanceHitEntity", "lanceHitValue", "lanceIsForward"}, packetHandler = PacketHandler.class)
 public class Lance {
 	public PacketHandler packetHandler;

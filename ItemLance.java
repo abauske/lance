@@ -344,35 +344,37 @@ public class ItemLance extends ItemSword {
 		}
 		float hit = Math.abs(this.hit) * 4;
 		if(hit != 0 || player.getDistanceToEntity(entity) <= 6) {
-			float hurt = (float) (this.getSpeed(entity) + this.getSpeed(player) + hit);
+			float hurt = (float) (this.getSpeed(entity) + this.getSpeed(player));
 			if(this.hit != 0) {
 				float test = this.hit;
 				this.hit = 0.0F;
 			}
 			if(player.isSprinting()) {
-				if(hurt == 0) {
-					hurt = 6.6666666666666666666F;
+				if(isForwardKeyPressed) {
+					hurt += 3F;
 				}
-				hurt *= 1.5F;
+				hurt *= 1.2F;
 			} else if(player.isRiding()) {
 				Entity ridingEntity = player.ridingEntity;
 				if(ridingEntity instanceof EntityHorse) {
 					if(isForwardKeyPressed) {
-						hurt += 6F;
+						hurt += 10F;
 					}
 					hurt *= 2F;
 				} else if(ridingEntity instanceof EntityPig) {
 					if(isForwardKeyPressed) {
-						hurt += 2F;
+						hurt += 1F;
 					}
 					hurt *= 1.1;
+				} else if(isForwardKeyPressed) {
+					hurt += 1F;
 				}
 			} else if(player.isSneaking()) {
-				hurt *= 0.1F;
+				hurt *= 0.2F;
 			} else if(isForwardKeyPressed) {
-				hurt += 2F;
+				hurt += 1F;
 			}
-//			hurt = 35;
+			hurt += hit;
 			if(hurt != 0) {
 				entity.attackEntityFrom(DamageSource.causePlayerDamage(player), hurt);
 				if(!player.capabilities.isCreativeMode) {
@@ -400,7 +402,7 @@ public class ItemLance extends ItemSword {
 	private double getSpeed(EntityLivingBase entity) {
 //		double dist = entity.getAIMoveSpeed();
 //		return dist;
-		double distPerSekond = entity.getDistance(entity.prevPosX, entity.prevPosY, entity.prevPosZ) * 20;
+		double distPerSekond = entity.getDistance(entity.prevPosX, entity.prevPosY, entity.prevPosZ) * 5;
 		return distPerSekond;
 	}
 	
