@@ -344,7 +344,7 @@ public class ItemLance extends ItemSword {
 		}
 		float hit = Math.abs(this.hit) * 4;
 		if(hit != 0 || player.getDistanceToEntity(entity) <= 6) {
-			float hurt = (float) (this.getSpeed(entity) + this.getSpeed(player));
+			float hurt = 0;
 			if(this.hit != 0) {
 				float test = this.hit;
 				this.hit = 0.0F;
@@ -397,13 +397,6 @@ public class ItemLance extends ItemSword {
 			}
 		}
 		return null;
-	}
-	
-	private double getSpeed(EntityLivingBase entity) {
-//		double dist = entity.getAIMoveSpeed();
-//		return dist;
-		double distPerSekond = entity.getDistance(entity.prevPosX, entity.prevPosY, entity.prevPosZ) * 5;
-		return distPerSekond;
 	}
 	
 	private void destroy(EntityPlayer player) {
