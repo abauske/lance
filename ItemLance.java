@@ -40,7 +40,7 @@ import net.minecraft.world.World;
 public class ItemLance extends ItemSword {
 
 	private int counter = 0;
-	private int counter2 = 0;
+//	private int counter2 = 0;
 	
 	private Minecraft minecraft;
 	
@@ -50,6 +50,7 @@ public class ItemLance extends ItemSword {
 	public float knockTime = 0.0F;
 	private boolean lastTickMouseButton0 = false;
 	private float hit = 0.0F;
+	private HitValueUntil hitInfo;
 	private int knockCounter = 0;
 	
 	private int countedTicks = 0;
@@ -101,12 +102,16 @@ public class ItemLance extends ItemSword {
 
 	@Override
 	public void onUpdate(ItemStack par1ItemStack, World world, Entity entity, int par4, boolean par5) {
-		if(!this.isRunningOnClient() && this.counter2 >= 10/*  && PacketHandler.hit != 0.0F*/) {
-			this.hit = (float) PacketHandler.hit;
-			System.out.println(hit);
-			PacketHandler.hit = 0.0F;
-			if(this.hit != 0.0F) {
-				this.counter2 = 0;
+		if(!this.isRunningOnClient()/*  && PacketHandler.hit != 0.0F*/) {
+//			this.hit = (float) PacketHandler.hit;
+//			System.out.println(hit);
+//			PacketHandler.hit = 0.0F;
+//			if(this.hit != 0.0F) {
+//				this.counter2 = 0;
+//			}
+//			
+			if(this.hitInfo == null || this.hitInfo.getUntil() <= System.currentTimeMillis()) {
+				this.hitInfo = PacketHandler.hit;
 			}
 		}
 		if(entity != null && entity instanceof EntityPlayer) {
@@ -165,7 +170,6 @@ public class ItemLance extends ItemSword {
 				} else if(!isButton0Down && this.lastTickMouseButton0) {
 					this.knockTime = -knockTime;
 					this.hit = Math.abs(knockTime);
-					System.out.println(this.hit);
 					this.knockCounter = 20;
 				} else if (knockTime < 0 && this.knockCounter <= 0) {
 					this.knockTime = 0.0F;
@@ -182,6 +186,9 @@ public class ItemLance extends ItemSword {
 			}
 			if(this.isRunningOnClient()) {
 				if(hit != 0) {
+					if(this.hitInfo == null || this.hitInfo.getUntil() <= System.currentTimeMillis()) {
+						this.hitInfo = new HitValueUntil((long) hit, System.currentTimeMillis() + 10);
+					}
 					this.sendHitValue(hit, (EntityClientPlayerMP) player);
 				}
 //				else {
@@ -198,10 +205,10 @@ public class ItemLance extends ItemSword {
 			this.counter = 20;
 		}
 		
-		this.counter2++;
-		if(this.counter2 > 9000) {
-			this.counter2 = 40;
-		}
+//		this.counter2++;
+//		if(this.counter2 > 9000) {
+//			this.counter2 = 40;
+//		}
 	}
 	
 	public Entity getMouseOver(float par1)
@@ -379,8 +386,12 @@ public class ItemLance extends ItemSword {
 			isForwardKeyPressed = PacketHandler.isForwardKeyPressed;
 			PacketHandler.isForwardKeyPressed = false;
 		}
-		float hit = Math.abs(this.hit) * 4;
-		if(hit != 0 || player.getDistanceToEntity(entity) <= 6) {
+		float hitUse = 0;
+		
+		if(this.hitInfo != null && this.hitInfo.getUntil() >= System.currentTimeMillis()) {
+			hitUse = Math.abs(this.hitInfo.getHit()) * 4;
+		}
+		if(hitUse != 0 || player.getDistanceToEntity(entity) <= 6) {
 			float hurt = 0;
 			if(player.isSprinting()) {
 				if(isForwardKeyPressed) {
@@ -409,7 +420,7 @@ public class ItemLance extends ItemSword {
 			} else if(isForwardKeyPressed) {
 				hurt += 1F;
 			}
-			hurt += hit;
+			hurt += hitUse;
 			hurt /= 10;
 			hurt *= this.strengh;
 			if(hurt != 0) {
@@ -472,8 +483,8 @@ public class ItemLance extends ItemSword {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
 		DataOutputStream outputStream = new DataOutputStream(bos);
 		try {
-			System.out.println((int) (hitValue * 10000));
-			outputStream.writeInt((int) (hitValue * 10000));
+			outputStream.writeFloat(hitValue);
+			outputStream.writeLong(System.currentTimeMillis() + 500);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

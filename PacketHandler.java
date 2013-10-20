@@ -12,7 +12,7 @@ import cpw.mods.fml.common.network.Player;
 public class PacketHandler implements IPacketHandler
 {
 	public static int entityID;
-	public static double hit;
+	public static HitValueUntil hit;
 	public static boolean isForwardKeyPressed;
 	@Override
     public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player player)
@@ -51,8 +51,7 @@ public class PacketHandler implements IPacketHandler
         
         try
         {
-        	hit = inputStream.readInt();
-        	hit /= 10000;
+        	hit = new HitValueUntil(inputStream.readFloat(), inputStream.readLong());
         }
         catch(IOException e)
         {
