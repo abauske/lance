@@ -13,8 +13,12 @@ import org.lwjgl.opengl.GL11;
 
 public class RenderLanceUp implements IItemRenderer {
 	protected ModelLanceUp model = new ModelLanceUp();
-	public static final ResourceLocation texture = new ResourceLocation("textures/models/mod/modelLanceUp.png");
-
+	private ResourceLocation texture = new ResourceLocation("textures/models/mod/modelLanceUpIron.png");
+	
+	public RenderLanceUp(String location) {
+		this.texture = new ResourceLocation(location);
+	}
+	
 	public boolean handleRenderType(ItemStack var1, ItemRenderType type) {
 		switch (type) {
 		case INVENTORY:

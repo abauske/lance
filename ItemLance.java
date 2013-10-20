@@ -17,9 +17,9 @@ import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -39,10 +39,13 @@ import net.minecraft.world.World;
 
 public class ItemLance extends ItemSword {
 
+	private int counter = 0;
+	private int counter2 = 0;
+	
 	private Minecraft minecraft;
 	
 	private Entity pointedEntity;
-	private EntityLivingBase pointedEntityLiving;
+	private EntityLiving pointedEntityLiving;
 	private MovingObjectPosition objectMouseOver;
 	public float knockTime = 0.0F;
 	private boolean lastTickMouseButton0 = false;
@@ -53,16 +56,29 @@ public class ItemLance extends ItemSword {
 	private boolean lastTickMouseButton1 = false;
 	
 	private int leftClickCounter = 0;
+	private final String material;
 	
-	public ItemLance(int par1, EnumToolMaterial par2EnumToolMaterial) {
-		super(par1, par2EnumToolMaterial);
+	private int strengh;
+	
+	private Item switchTo;
+	
+	public ItemLance(int par1, int strengh, String material) {
+		super(par1, EnumToolMaterial.IRON);
+		setCreativeTab(null);
+		this.strengh = strengh;
+		this.material = material;
+	}
+	
+	public void setSwitchTo(Item switchTo) {
+
+		this.switchTo = switchTo;
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerIcons(IconRegister reg) {
 		this.minecraft = Minecraft.getMinecraft();
-		this.itemIcon = reg.registerIcon("Lance:lance");
+		this.itemIcon = reg.registerIcon("Lance:lance" + this.material);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -85,39 +101,52 @@ public class ItemLance extends ItemSword {
 
 	@Override
 	public void onUpdate(ItemStack par1ItemStack, World world, Entity entity, int par4, boolean par5) {
-		if(!this.isRunningOnClient()  && PacketHandler.hit != 0.0F) {
-			this.hit = PacketHandler.hit;
+		if(!this.isRunningOnClient() && this.counter2 >= 10/*  && PacketHandler.hit != 0.0F*/) {
+			this.hit = (float) PacketHandler.hit;
+			System.out.println(hit);
 			PacketHandler.hit = 0.0F;
+			if(this.hit != 0.0F) {
+				this.counter2 = 0;
+			}
 		}
 		if(entity != null && entity instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) entity;
 			ItemStack canPlayerMove = player.getCurrentEquippedItem();
 			ItemStack canPlayerMove1 = player.getHeldItem();
-			if(player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().itemID == Lance.lanceOn.itemID) {
+			if(player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().itemID == this.itemID) {
 				if (this.isRunningOnClient() ? this.getMouseOver(1.0F) != null : true) {
 					Entity aim = this.isRunningOnClient() ? this.getMouseOver(1.0F) : null;
 					aim = this.getRightEntity(world, this.isRunningOnClient() ? aim.entityId : PacketHandler.entityID);
 					if (!this.isRunningOnClient()) {
 						PacketHandler.entityID = 0;
 					}
-					if (aim instanceof EntityLivingBase && player.getDistanceToEntity(aim) <= 12 && !aim.isDead) {
-						boolean attacked = this.attack((EntityLivingBase) aim, (EntityPlayer) entity);
+					if (aim instanceof EntityLiving && player.getDistanceToEntity(aim) <= 12 && !aim.isDead) {
+						boolean attacked = this.attack((EntityLiving) aim, (EntityPlayer) entity);
 						if (attacked && player.getCurrentEquippedItem() != null) {
 							this.setDamage(player.getCurrentEquippedItem(), player.getCurrentEquippedItem().getItemDamage() + 1);
 						}
-						ItemStack armor = ((EntityLivingBase) aim).getCurrentItemOrArmor(3);
-						if (attacked && armor != null) {
-							ItemArmor chestplate = (ItemArmor) armor.getItem();
-							int protection = chestplate.getArmorMaterial().getDamageReductionAmount(1);
-							if (protection >= 6 && protection < 8) {
-								if (player.getCurrentEquippedItem() != null) {
-									this.setDamage(player.getCurrentEquippedItem(), player.getCurrentEquippedItem().getItemDamage() + 84);
-								}
-							}
-							if (protection >= 8) {
-								this.destroy(player);
+						int armor = ((EntityLiving) aim).getTotalArmorValue();
+						if (attacked && Lance.shouldTakeDamageFromArmour && this.counter >= 10) {
+							this.counter = 0;
+							if(armor > 0) {
+								this.setDamage(player.getCurrentEquippedItem(), player.getCurrentEquippedItem().getItemDamage() + (int) ((100 / (11 - (armor / 2))) / 10) * Lance.armorBehaviour);
+							} else {
+								this.setDamage(player.getCurrentEquippedItem(), player.getCurrentEquippedItem().getItemDamage() + 1);
 							}
 						}
+//						ItemStack armor = ((EntityLiving) aim).getCurrentItemOrArmor(3);
+//						if (attacked && armor != null && Lance.shouldTakeDamageFromArmour) {
+//							ItemArmor chestplate = (ItemArmor) armor.getItem();
+//							int protection = chestplate.getArmorMaterial().getDamageReductionAmount(1);
+//							if (protection >= 6 && protection < 8) {
+//								if (player.getCurrentEquippedItem() != null) {
+//									this.setDamage(player.getCurrentEquippedItem(), player.getCurrentEquippedItem().getItemDamage() + (int) (this.getMaxDamage() / 3));
+//								}
+//							}
+//							if (protection >= 8) {
+//								this.destroy(player);
+//							}
+//						}
 					}
 				}
 				if(player.getCurrentEquippedItem() != null) {
@@ -126,16 +155,6 @@ public class ItemLance extends ItemSword {
 					}
 				}
 			}
-//				boolean isButton1Down = Mouse.isButtonDown(1);
-//				boolean isButton1Down = this.minecraft.gameSettings.keyBindUseItem.pressed;
-//				if(isButton1Down && !this.lastTickMouseButton1) {
-//					if(this.standby) {
-//						this.standby = false;
-//					} else {
-//						this.standby = true;
-//					}
-//				}
-//				this.lastTickMouseButton1 = isButton1Down;
 
 			if(this.minecraft != null) {
 				this.hit = 0.0F;
@@ -145,7 +164,8 @@ public class ItemLance extends ItemSword {
 					this.knockTime += 0.03F;
 				} else if(!isButton0Down && this.lastTickMouseButton0) {
 					this.knockTime = -knockTime;
-					this.hit = knockTime;
+					this.hit = Math.abs(knockTime);
+					System.out.println(this.hit);
 					this.knockCounter = 20;
 				} else if (knockTime < 0 && this.knockCounter <= 0) {
 					this.knockTime = 0.0F;
@@ -160,12 +180,27 @@ public class ItemLance extends ItemSword {
 				}
 				this.lastTickMouseButton0 = isButton0Down;
 			}
-			if(this.isRunningOnClient() && hit != 0) {
-				this.sendHitValue(hit, (EntityClientPlayerMP) player);
+			if(this.isRunningOnClient()) {
+				if(hit != 0) {
+					this.sendHitValue(hit, (EntityClientPlayerMP) player);
+				}
+//				else {
+//					this.sendHitValue(0, (EntityClientPlayerMP) player);
+//				}
 			}
 		}
 		if(this.leftClickCounter > 0) {
 			this.leftClickCounter--;
+		}
+		
+		this.counter++;
+		if(this.counter > 9000) {
+			this.counter = 20;
+		}
+		
+		this.counter2++;
+		if(this.counter2 > 9000) {
+			this.counter2 = 40;
 		}
 	}
 	
@@ -183,11 +218,11 @@ public class ItemLance extends ItemSword {
                 double d1 = d0;
                 Vec3 vec3 = Minecraft.getMinecraft().renderViewEntity.getPosition(par1);
                 
-                boolean test = false;
-                if (Minecraft.getMinecraft().playerController.extendedReach())
+                boolean test = true;
+                if (Minecraft.getMinecraft().playerController.extendedReach() || test)
                 {
-                    d0 = 10.0D;
-                    d1 = 10.0D;
+                    d0 = 7.0D;
+                    d1 = 7.0D;
                 }
                 else
                 {
@@ -256,9 +291,9 @@ public class ItemLance extends ItemSword {
                 {
                     this.objectMouseOver = new MovingObjectPosition(this.pointedEntity);
 
-                    if (this.pointedEntity instanceof EntityLivingBase)
+                    if (this.pointedEntity instanceof EntityLiving)
                     {
-                        this.pointedEntityLiving = (EntityLivingBase)this.pointedEntity;
+                        this.pointedEntityLiving = (EntityLiving)this.pointedEntity;
                     }
                 }
             }
@@ -279,10 +314,12 @@ public class ItemLance extends ItemSword {
 //			}
 //			this.leftClickCounter = 6;
 //		}
-		ItemStack newLance = new ItemStack(Lance.lanceUp, 1);
-		newLance.setItemDamage(itemstack.getItemDamage());
-    	return newLance;
-//		return itemstack;
+		if(this.switchTo != null) {
+			ItemStack newLance = new ItemStack(this.switchTo, 1);
+			newLance.setItemDamage(itemstack.getItemDamage());
+			return newLance;
+		}
+		return itemstack;
 	}
 
 	@Override
@@ -300,15 +337,15 @@ public class ItemLance extends ItemSword {
 		return true;
 	}
 
-	private void knockBack(EntityLivingBase entity, EntityPlayer player) {
+	private void knockBack(EntityLiving entity, EntityPlayer player) {
 		int speed;
 		if(player.isSprinting()) {
 			speed = 10;
 		} else if(player.isRiding()) {
 			Entity ridingEntity = player.ridingEntity;
-			if(ridingEntity instanceof EntityHorse) {
+			/*if(ridingEntity instanceof EntityHorse) {
 				speed = 20;
-			} else if(ridingEntity instanceof EntityPig) {
+			} else */if(ridingEntity instanceof EntityPig) {
 				speed = 5;
 			} else {
 				speed = 2;
@@ -333,7 +370,7 @@ public class ItemLance extends ItemSword {
         }
 	}
 
-	private boolean attack(EntityLivingBase entity, EntityPlayer player) {
+	private boolean attack(EntityLiving entity, EntityPlayer player) {
 		boolean isForwardKeyPressed;
 		if(this.isRunningOnClient()) {
 			isForwardKeyPressed = Minecraft.getMinecraft().gameSettings.keyBindForward.pressed;
@@ -345,10 +382,6 @@ public class ItemLance extends ItemSword {
 		float hit = Math.abs(this.hit) * 4;
 		if(hit != 0 || player.getDistanceToEntity(entity) <= 6) {
 			float hurt = 0;
-			if(this.hit != 0) {
-				float test = this.hit;
-				this.hit = 0.0F;
-			}
 			if(player.isSprinting()) {
 				if(isForwardKeyPressed) {
 					hurt += 3F;
@@ -356,16 +389,18 @@ public class ItemLance extends ItemSword {
 				hurt *= 1.2F;
 			} else if(player.isRiding()) {
 				Entity ridingEntity = player.ridingEntity;
-				if(ridingEntity instanceof EntityHorse) {
+				/*if(ridingEntity instanceof EntityHorse) {
 					if(isForwardKeyPressed) {
 						hurt += 10F;
 					}
 					hurt *= 2F;
-				} else if(ridingEntity instanceof EntityPig) {
+				} else */if(ridingEntity instanceof EntityPig) {
 					if(isForwardKeyPressed) {
 						hurt += 1F;
 					}
 					hurt *= 1.1;
+				} else if(ridingEntity != null) {
+					hurt += this.getSpeed((EntityLiving) ridingEntity);
 				} else if(isForwardKeyPressed) {
 					hurt += 1F;
 				}
@@ -375,9 +410,11 @@ public class ItemLance extends ItemSword {
 				hurt += 1F;
 			}
 			hurt += hit;
+			hurt /= 10;
+			hurt *= this.strengh;
 			if(hurt != 0) {
-				entity.attackEntityFrom(DamageSource.causePlayerDamage(player), hurt);
-				if(!player.capabilities.isCreativeMode) {
+				entity.attackEntityFrom(DamageSource.causePlayerDamage(player), (int) hurt);
+				if(!player.capabilities.isCreativeMode && Lance.shouldLanceBreak) {
 					return true;
 				}
 			}
@@ -385,6 +422,14 @@ public class ItemLance extends ItemSword {
 		return false;
 //		this.knockBack(entity, player);
 	}
+	
+ 	private double getSpeed(EntityLiving entity) {
+ //		double dist = entity.getAIMoveSpeed();
+ //		return dist;
+		double distPerSekond = entity.getDistance(entity.prevPosX, entity.prevPosY, entity.prevPosZ) * 35;
+ 		return distPerSekond;
+ 	}
+
 	
 	private Entity getRightEntity(World world, int entityID) {
 		List list = world.loadedEntityList;
@@ -402,7 +447,7 @@ public class ItemLance extends ItemSword {
 	private void destroy(EntityPlayer player) {
 		if(player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().itemID == this.itemID) {
 			player.inventory.mainInventory[player.inventory.currentItem] = null;
-			player.dropItem(Item.stick.itemID, 2);
+			player.dropPlayerItem(new ItemStack(Item.stick, 2));
 		}
 	}
 	
@@ -427,6 +472,7 @@ public class ItemLance extends ItemSword {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
 		DataOutputStream outputStream = new DataOutputStream(bos);
 		try {
+			System.out.println((int) (hitValue * 10000));
 			outputStream.writeInt((int) (hitValue * 10000));
 		} catch (Exception ex) {
 			ex.printStackTrace();

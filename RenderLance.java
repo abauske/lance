@@ -18,8 +18,12 @@ import org.lwjgl.opengl.GL11;
 public class RenderLance implements IItemRenderer {
 	
 	protected ModelLanceUp model = new ModelLanceUp();
-	public static final ResourceLocation texture = new ResourceLocation("textures/models/mod/modelLanceUp.png");
+	private ResourceLocation texture = new ResourceLocation("textures/models/mod/modelLanceUpIron.png");
 	private float knockTime = 0.0F;
+	
+	public RenderLance(String location) {
+		this.texture = new ResourceLocation(location);
+	}
 
 	public boolean handleRenderType(ItemStack var1, ItemRenderType type)
     {

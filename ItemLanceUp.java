@@ -4,6 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,16 +15,22 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.world.World;
 
-public class ItemLanceUp extends ItemSword {
+public class ItemLanceUp extends Item {
 
-	public ItemLanceUp(int par1, EnumToolMaterial par2EnumToolMaterial) {
-		super(par1, par2EnumToolMaterial);
+	private final Item switchTo;
+	private final String material;
+	
+	public ItemLanceUp(int par1, Item switchTo, String material) {
+		super(par1);
+		setCreativeTab(CreativeTabs.tabCombat);
+		this.switchTo = switchTo;
+		this.material = material;
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerIcons(IconRegister reg) {
-		this.itemIcon = reg.registerIcon("Lance:lance");
+		this.itemIcon = reg.registerIcon("Lance:lance" + this.material);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -46,9 +53,12 @@ public class ItemLanceUp extends ItemSword {
 
     @Override
 	public ItemStack onItemRightClick(ItemStack itemstack, World par2World, EntityPlayer par3EntityPlayer) {
-		ItemStack newLance = new ItemStack(Lance.lanceOn, 1);
-		newLance.setItemDamage(itemstack.getItemDamage());
-    	return newLance;
+    	if(this.switchTo != null) {
+			ItemStack newLance = new ItemStack(this.switchTo, 1);
+			newLance.setItemDamage(itemstack.getItemDamage());
+			return newLance;
+    	}
+    	return itemstack;
 	}
 
 	@Override
